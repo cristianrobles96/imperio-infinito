@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imperio Infinito</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;color:white;font-family:Arial,sans-serif;
+ background:radial-gradient(circle at 50% 35%,#7130a8,#17152f 55%,#080b18);
+ text-align:center;min-height:100vh;
+}
+header{padding:18px;background:#101326;border-bottom:2px solid #e5ad42}
+h1{font-size:34px;color:#ffd45b;text-shadow:0 3px 12px #ff6500;margin:8px}
+.sub{color:#d9c9ff}
+.stats{display:flex;justify-content:space-around;padding:14px;background:#171b32}
+.card{background:#242b49;border:1px solid #7565a5;border-radius:14px;padding:10px}
+.arena{
+ margin:18px 12px;padding:20px 10px 25px;border-radius:24px;
+ background:linear-gradient(#34245e,#9a4b35 65%,#27152c);
+ border:3px solid #e9b64d;box-shadow:0 0 25px #a44cff;
+}
+.world{color:#ffe18a;font-weight:bold;font-size:20px}
+.boss{font-size:90px;margin:12px;filter:drop-shadow(0 8px 5px #180c22)}
+.name{font-size:23px;font-weight:bold}
+.bar{height:17px;background:#401d2b;border-radius:20px;margin:12px 18px;overflow:hidden}
+.hp{height:100%;width:100%;background:linear-gradient(90deg,#ff2929,#ff9a42)}
+button{
+ border:0;border-radius:14px;padding:13px 17px;margin:5px;
+ background:linear-gradient(#ffd96a,#d78319);color:#301700;
+ font-weight:bold;font-size:16px;box-shadow:0 4px 0 #78400d;
+}
+button:active{transform:translateY(3px);box-shadow:none}
+.attack{font-size:20px;padding:18px 35px}
+.menu{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:15px}
+.menu button{background:linear-gradient(#343d65,#171c37);color:white;border:1px solid #9d8bd5;box-shadow:none}
+.panel{margin:15px;padding:15px;background:#171b32;border:1px solid #7565a5;border-radius:16px}
+.small{font-size:13px;color:#c9c3df}
+</style>
+</head>
+<body>
+<header>
+<h1>🐷 IMPERIO INFINITO</h1>
+<div class="sub">CONQUISTA TODOS LOS MUNDOS</div>
+</header>
+
+<div class="stats">
+<div class="card">🪙 <span id="coins">0</span></div>
+<div class="card">💎 <span id="gems">0</span></div>
+<div class="card">⚔️ Nivel <span id="level">1</span></div>
+</div>
+
+<div class="arena">
+<div class="world" id="world">🌿 VALLE VERDE</div>
+<div class="boss" id="pig">🐗</div>
+<div class="name" id="bossname">Jabalí Guardián</div>
+<div class="bar"><div class="hp" id="hp"></div></div>
+<div id="health">100 / 100</div>
+<p>¡Derrota al jefe para conquistar el mundo!</p>
+<button class="attack" onclick="hit()">⚔️ ATACAR</button>
+<div id="message">¡Tu aventura comienza!</div>
+</div>
+
+<div class="panel">
+<h3>🛡️ TU EQUIPO</h3>
+<div>🦾 Robot: <span id="robot">0</span> · 🐉 Dragón: <span id="dragon">0</span> · ❄️ Guardián: <span id="guardian">0</span></div>
+<p class="small">Tus ayudantes atacan automáticamente.</p>
+</div>
+
+<div class="menu">
+<button onclick="upgrade()">🔨 Mejorar arma<br>🪙 <span id="cost">25</span></button>
+<button onclick="hire()">🤖 Contratar ayudante<br>🪙 50</button>
+<button onclick="changeWeapon()">⚔️ Cambiar arma</button>
+<button onclick="showWorld()">🌍 Mundos</button>
+<button onclick="showShop()">💎 Tienda</button>
+<button onclick="special()">🔥 Ataque especial</button>
+</div>
+
+<div class="panel" id="extra">
+<h3>🏰 IMPERIO INFINITO</h3>
+<p>Derrota jefes, consigue monedas y mejora tu equipo.</p>
+</div>
+<div class="small">Prototipo de prueba · Progreso guardado en este dispositivo</div>
+
+<script>
+let coins=Number(localStorage.coins||0);
+let gems=Number(localStorage.gems||0);
+let level=Number(localStorage.level||1);
+let damage=Number(localStorage.damage||10);
+let helpers=Number(localStorage.helpers||0);
+let world=Number(localStorage.world||0);
+let bossHP=100*Math.pow(2,world);
+let maxHP=bossHP;
+let weapons=["Martillo de Hierro","Espada Real","Hacha de Fuego","Martillo Cósmico"];
+let weapon=Number(localStorage.weapon||0);
+let worlds=[
+ ["🌿 VALLE VERDE","🐗","Jabalí Guardián"],
+ ["🏜️ DESIERTO DORADO","🐷","Faraón Tocino"],
+ ["🌋 VOLCÁN CARMESÍ","🐲","Dragón Tocino"],
+ ["❄️ REINO HELADO","🐻","Rey Glacial"],
+ ["🌆 CIUDAD NEÓN","🤖","Cerdo Mecánico"],
+ ["🌴 TEMPLO DE LA JUNGLA","🦍","Rey Salvaje"],
+ ["🌙 LUNA PORCINA","👾","Señor Lunar"],
+ ["🌌 GALAXIA INFINITA","👑","Emperador Cósmico"]
+];
+function save(){
+ localStorage.coins=coins;localStorage.gems=gems;
+ localStorage.level=level;localStorage.damage=damage;
+ localStorage.helpers=helpers;localStorage.world=world;
+ localStorage.weapon=weapon;
+}
+function draw(){
+ document.getElementById("coins").textContent=Math.floor(coins);
+ document.getElementById("gems").textContent=gems;
+ document.getElementById("level").textContent=level;
+ document.getElementById("robot").textContent=helpers;
+ document.getElementById("dragon").textContent=Math.floor(helpers/2);
+ document.getElementById("guardian").textContent=Math.floor(helpers/3);
+ document.getElementById("world").textContent=worlds[world][0];
+ document.getElementById("pig").textContent=worlds[world][1];
+ document.getElementById("bossname").textContent=worlds[world][2];
+ document.getElementById("health").textContent=Math.ceil(bossHP)+" / "+Math.ceil(maxHP);
+ document.getElementById("hp").style.width=Math.max(0,bossHP/maxHP*100)+"%";
+ document.getElementById("cost").textContent=25*level;
+ save();
+}
+function hit(){
+ bossHP-=damage;
+ if(bossHP<=0){coins+=100*(world+1);gems+=5;level++;world=(world+1)%worlds.length;maxHP=100*Math.pow(2,world);bossHP=maxHP;document.getElementById("message").textContent="🏆 ¡JEFE DERROTADO! +100 monedas y 5 gemas";}
+ else document.getElementById("message").textContent="¡Golpe de "+damage+" puntos!";
+ draw();
+}
+function upgrade(){
+ let cost=25*level;
+ if(coins>=cost){coins-=cost;damage+=5;level++;document.getElementById("message").textContent="¡Arma mejorada!";}
+ else document.getElementById("message").textContent="Necesitas más monedas.";
+ draw();
+}
+function hire(){
+ if(coins>=50){coins-=50;helpers++;document.getElementById("message").textContent="¡Nuevo ayudante contratado!";}
+ else document.getElementById("message").textContent="Necesitas 50 monedas.";
+ draw();
+}
+function changeWeapon(){
+ weapon=(weapon+1)%weapons.length;
+ damage+=5;
+ document.getElementById("message").textContent="Arma equipada: "+weapons[weapon];
+ draw();
+}
+function showWorld(){
+ document.getElementById("extra").innerHTML="<h3>🌍 MUNDOS</h3>"+worlds.map((w,i)=>"<p>"+(i<=world?"🔓 ":"🔒 ")+w[0]+"</p>").join("");
+}
+function showShop(){
+ document.getElementById("extra").innerHTML="<h3>💎 TIENDA</h3><p>Gemas: "+gems+"</p><p>Esta tienda es una demostración. Todavía no procesa pagos reales.</p><p>Próximamente: armas, ayudantes y apariencias exclusivas.</p>";
+}
+function special(){
+ bossHP-=damage*5;
+ if(bossHP<=0){coins+=100*(world+1);gems+=5;level++;world=(world+1)%worlds.length;maxHP=100*Math.pow(2,world);bossHP=maxHP;}
+ document.getElementById("message").textContent="🔥 ¡ATAQUE ESPECIAL!";
+ draw();
+}
+setInterval(()=>{
+ if(helpers>0){bossHP-=helpers*2;if(bossHP<=0){coins+=100*(world+1);gems+=5;level++;world=(world+1)%worlds.length;maxHP=100*Math.pow(2,world);bossHP=maxHP;}draw();}
+},2000);
+draw();
+</script>
+</body>
+</html>
