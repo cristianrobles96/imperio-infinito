@@ -1,0 +1,37 @@
+workflows:
+  imperio-infinito-android-debug:
+    name: Imperio Infinito - Android Debug
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      node: v22.11.0
+      java: 17
+    scripts:
+      - name: Extract master project
+        script: |
+          unzip -q -o "$CM_BUILD_DIR/Imperio_Infinito_Maestro_Fases_1-23.zip" -d "$CM_BUILD_DIR"
+          cd "$CM_BUILD_DIR/Imperio_Infinito_Consolidado"
+          test -f package.json
+          test -f www/index.html
+      - name: Install Node dependencies
+        script: |
+          cd "$CM_BUILD_DIR/Imperio_Infinito_Consolidado"
+          npm install
+      - name: Run project release checks
+        script: |
+          cd "$CM_BUILD_DIR/Imperio_Infinito_Consolidado"
+          npm run release:check
+      - name: Generate Android project with Capacitor
+        script: |
+          cd "$CM_BUILD_DIR/Imperio_Infinito_Consolidado"
+          npx cap add android
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          npx cap sync android
+      - name: Build Android debug APK
+        script: |
+          cd "$CM_BUILD_DIR/Imperio_Infinito_Consolidado/android"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+    artifacts:
+      - Imperio_Infinito_Consolidado/android/app/build/outputs/apk/debug/*.apk
+      - Imperio_Infinito_Consolidado/android/app/build/outputs/apk/debug/output-metadata.json
