@@ -1,0 +1,48 @@
+name: Prepare Android source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out android-build
+        uses: actions/checkout@v4
+        with:
+          ref: android-build
+
+      - name: Extract master project
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="Imperio_Infinito_Maestro_Fases_1-23.zip"
+          test -f "$archive"
+          unzip -q "$archive" -d /tmp/imperio-master
+          source_dir="/tmp/imperio-master/Imperio_Infinito_Consolidado"
+          test -f "$source_dir/package.json"
+          cp -a "$source_dir/." .
+          test -f package.json
+          test -f www/index.html
+
+      - name: Verify project scripts
+        run: |
+          node --version
+          npm run release:check
+
+      - name: Commit extracted source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README_PRINCIPAL.md README_ANDROID.md CONTROL_DE_FASES.md package.json capacitor.config.json www scripts docs android-resources
+          if git diff --cached --quiet; then
+            echo "No extracted source changes to commit."
+          else
+            git commit -m "Extract master project source for Android build"
+            git push origin HEAD:android-build
+          fi
