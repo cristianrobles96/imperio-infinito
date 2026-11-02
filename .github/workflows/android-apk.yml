@@ -1,0 +1,74 @@
+name: Build Android APK
+
+on:
+  push:
+    paths:
+      - "Imperio_Infinito_Fase70_Web.zip"
+      - ".github/workflows/android-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Prepare Capacitor project
+        run: |
+          mkdir -p www
+          unzip -o Imperio_Infinito_Fase70_Web.zip -d www
+          cat > package.json <<'EOF'
+          {
+            "name": "imperio-infinito",
+            "version": "1.0.0",
+            "private": true,
+            "scripts": { "build": "echo Web assets ready" },
+            "dependencies": {
+              "@capacitor/core": "^7.4.3",
+              "@capacitor/android": "^7.4.3"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.4.3"
+            }
+          }
+          EOF
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.imperioinfinitostudio.imperioinfinito",
+            "appName": "Imperio Infinito",
+            "webDir": "www",
+            "bundledWebRuntime": false
+          }
+          EOF
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Imperio-Infinito-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
